@@ -4,20 +4,26 @@ import gradio as gr
 import os
 from datetime import datetime
 import time
+import cv2
 
 
 def training(img, video):
-    import ipdb;ipdb.set_trace();
     img_tail = img.split('.')[-1]
-    cmd = f'mv {img} ./work_dirs/img.{img_tail}' 
+    img_name = f'./work_dirs/img.{img_tail}'
+    cmd = f'mv {img} {img_name}' 
     os.system(cmd)
     video_tail = video.split('.')[-1]
-    cmd = f'mv {video} ./work_dirs/video.{video_tail}'
+    video_name = f'./work_dirs/video.{video_tail}'
+    cmd = f'mv {video} {video_name}'
     os.system(cmd)
+
+    cap = cv2.VideoCapture(video_name)
+
+    fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
 
     time_str = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 
-    cmd = f'python run.py -s ./work_dirs/img.{img_tail} -t ./work_dirs/video.{video_tail} -o "{time_str}.mp4" --keep-frames --keep-fps --output-video-quality 100'
+    cmd = f'python run.py -s {img_name} -t {video_name} -o "{time_str}.mp4" --keep-frames --keep-fps --output-video-quality 100'
 
     print(cmd)
     os.system(cmd)
@@ -28,7 +34,7 @@ def training(img, video):
         if os.path.exists(file_path):
             break
     
-    cmd = 'ffmpeg -r 8 -i work_dirs/temp/video/%04d.png work_dirs/result.mp4'
+    cmd = f'ffmpeg -r {fps} -i work_dirs/temp/video/%04d.png work_dirs/result.mp4'
     os.system(cmd)
     return 'work_dirs/result.mp4'
 
