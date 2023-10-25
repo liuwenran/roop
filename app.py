@@ -12,16 +12,17 @@ def training(img, video):
     img_name = f'./work_dirs/img.{img_tail}'
     cmd = f'mv {img} {img_name}' 
     os.system(cmd)
-    video_tail = video.split('.')[-1]
-    video_name = f'./work_dirs/video.{video_tail}'
-    cmd = f'mv {video} {video_name}'
+
+    video_input = video.name
+    video_tail = video_input.split('.')[-1]
+    time_str = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
+    video_name = f'./work_dirs/{time_str}.{video_tail}'
+    cmd = f'mv {video_input} {video_name}'
     os.system(cmd)
 
     cap = cv2.VideoCapture(video_name)
 
     fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
-
-    time_str = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
 
     cmd = f'python run.py -s {img_name} -t {video_name} -o "{time_str}.mp4" --keep-frames --keep-fps --output-video-quality 100'
 
@@ -34,7 +35,7 @@ def training(img, video):
         if os.path.exists(file_path):
             break
     
-    cmd = f'ffmpeg -r {fps} -i work_dirs/temp/video/%04d.png work_dirs/result.mp4'
+    cmd = f'ffmpeg -y -r {fps} -i work_dirs/temp/{time_str}/%04d.png work_dirs/result.mp4'
     os.system(cmd)
     return 'work_dirs/result.mp4'
 
@@ -45,17 +46,16 @@ with block:
 
     with gr.Row():
         with gr.Column():
+            gr.Markdown('### 上传人像照')
             image_input = gr.Image(type="filepath", label='上传人像照')
-            video_input = gr.Video(
-                        label='上传表情gif或视频',
-                        source='upload',
-                        type='filepath',
-                        elem_id='input-vid')
+            gr.Markdown('### 上传gif或视频')
+            video = gr.File()
+
         with gr.Column():
             training_button = gr.Button(label='training', value='换脸')
             video_out = gr.Video(label='Video Result', elem_id='video-output')
 
-    training_button_inputs = [image_input, video_input]
+    training_button_inputs = [image_input, video]
     training_button_outputs = [video_out]
     training_button.click(fn=training, inputs=training_button_inputs, outputs=training_button_outputs)
 
