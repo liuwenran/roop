@@ -55,13 +55,13 @@ with block:
     with gr.Row():
         with gr.Column():
             gr.Markdown('### 上传人像照')
-            image_input = gr.Image(type="filepath", label='上传人像照').style(height=512)
+            image_input = gr.Image(type="filepath", label='上传人像照', height=512)
             gr.Markdown('### 上传gif或视频')
             video = gr.File()
 
         with gr.Column():
             gr.Markdown('### 生成结果')
-            video_out = gr.Video(label='Video Result', elem_id='video-output').style(height=512)
+            video_out = gr.Video(label='Video Result', elem_id='video-output', height=512)
             training_button = gr.Button(value='换脸')
 
     training_button_inputs = [image_input, video]
