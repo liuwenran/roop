@@ -7,6 +7,14 @@ import time
 import cv2
 
 
+dir_path = f'work_dirs/'
+if not os.path.exists(dir_path):
+    os.makedirs(dir_path)
+dir_path = f'work_dirs/temp'
+if not os.path.exists(dir_path):
+    os.makedirs(dir_path)
+
+
 def training(img, video):
     img_tail = img.split('.')[-1]
     img_name = f'./work_dirs/img.{img_tail}'
@@ -47,13 +55,14 @@ with block:
     with gr.Row():
         with gr.Column():
             gr.Markdown('### 上传人像照')
-            image_input = gr.Image(type="filepath", label='上传人像照')
+            image_input = gr.Image(type="filepath", label='上传人像照').style(height=512)
             gr.Markdown('### 上传gif或视频')
             video = gr.File()
 
         with gr.Column():
+            gr.Markdown('### 生成结果')
+            video_out = gr.Video(label='Video Result', elem_id='video-output').style(height=512)
             training_button = gr.Button(value='换脸')
-            video_out = gr.Video(label='Video Result', elem_id='video-output')
 
     training_button_inputs = [image_input, video]
     training_button_outputs = [video_out]
