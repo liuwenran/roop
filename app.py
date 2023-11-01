@@ -59,5 +59,5 @@ with block:
     training_button_outputs = [video_out]
     training_button.click(fn=training, inputs=training_button_inputs, outputs=training_button_outputs)
 
-block.launch(server_name='0.0.0.0', server_port=8122, share=False)
+block.launch(server_name='0.0.0.0', server_port=7860, share=False)
 
