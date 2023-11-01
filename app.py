@@ -18,14 +18,14 @@ if not os.path.exists(dir_path):
 def training(img, video):
     img_tail = img.split('.')[-1]
     img_name = f'./work_dirs/img.{img_tail}'
-    cmd = f'mv {img} {img_name}' 
+    cmd = f'cp {img} {img_name}' 
     os.system(cmd)
 
     video_input = video.name
     video_tail = video_input.split('.')[-1]
     time_str = datetime.now().strftime("%Y-%m-%dT%H-%M-%S")
     video_name = f'./work_dirs/{time_str}.{video_tail}'
-    cmd = f'mv {video_input} {video_name}'
+    cmd = f'cp {video_input} {video_name}'
     os.system(cmd)
 
     cap = cv2.VideoCapture(video_name)
