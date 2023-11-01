@@ -52,7 +52,7 @@ with block:
             video = gr.File()
 
         with gr.Column():
-            training_button = gr.Button(label='training', value='换脸')
+            training_button = gr.Button(value='换脸')
             video_out = gr.Video(label='Video Result', elem_id='video-output')
 
     training_button_inputs = [image_input, video]
