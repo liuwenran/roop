@@ -33,6 +33,10 @@ def training(img, video):
 
     fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
 
+    length = int(cap.get(cv2.CAP_PROP_FRAME_COUNT))
+    if length > 500:
+        raise gr.Error("视频太长了，搞不动一点。请减小视频长度，这只是表情包。")
+
     args = core.parse_args()
 
     args.source_path = img_name
@@ -59,6 +63,20 @@ with block:
             image_input = gr.Image(type="filepath", label='上传人像照', height=512)
             gr.Markdown('### 上传gif或视频')
             video = gr.File()
+            video_show = gr.Video()
+            example_folder = os.path.join(os.path.dirname(__file__), "./example_gifs")
+            example_list = [os.path.join(example_folder, example) for example in os.listdir(example_folder)]
+            example_input = []
+            for example in example_list:
+                example_input.append([example, example])
+            gr.Examples(
+                examples=example_input,
+                inputs=[video, video_show],
+                # outputs=[input_image],
+                cache_examples=False,
+                label='Examples (click one of the video below to start)',
+                examples_per_page=4
+            )
 
         with gr.Column():
             gr.Markdown('### 生成结果')
