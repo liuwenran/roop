@@ -27,7 +27,7 @@ warnings.filterwarnings('ignore', category=UserWarning, module='torchvision')
 
 
 def parse_args() -> None:
-    signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
+    # signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
     program = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=100))
     program.add_argument('-s', '--source', help='select an source image', dest='source_path')
     program.add_argument('-t', '--target', help='select an target image or video', dest='target_path')
@@ -50,7 +50,9 @@ def parse_args() -> None:
     program.add_argument('-v', '--version', action='version', version=f'{roop.metadata.name} {roop.metadata.version}')
 
     args = program.parse_args()
+    return args
 
+def set_args(args) -> None:
     roop.globals.source_path = args.source_path
     roop.globals.target_path = args.target_path
     roop.globals.output_path = normalize_output_path(roop.globals.source_path, roop.globals.target_path, args.output_path)
@@ -205,8 +207,8 @@ def destroy() -> None:
     sys.exit()
 
 
-def run() -> None:
-    parse_args()
+def run(args) -> None:
+    set_args(args)
     if not pre_check():
         return
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):

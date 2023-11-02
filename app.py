@@ -5,6 +5,7 @@ import os
 from datetime import datetime
 import time
 import cv2
+from roop import core
 
 
 dir_path = f'work_dirs/'
@@ -32,16 +33,16 @@ def training(img, video):
 
     fps = int(round(cap.get(cv2.CAP_PROP_FPS)))
 
-    cmd = f'python run.py -s {img_name} -t {video_name} -o "{time_str}.mp4" --keep-frames --keep-fps --output-video-quality 100'
+    args = core.parse_args()
 
-    print(cmd)
-    os.system(cmd)
+    args.source_path = img_name
+    args.target_path = video_name
+    args.output_path = f'{time_str}.mp4'
+    args.keep_frames = True
+    args.keep_fps = True
+    args.output_video_quality = 100
+    core.run(args)
 
-    while True:
-        file_path = f'{time_str}.mp4'
-        time.sleep(1)
-        if os.path.exists(file_path):
-            break
     
     cmd = f'ffmpeg -y -r {fps} -i work_dirs/temp/{time_str}/%04d.png work_dirs/result.mp4'
     os.system(cmd)
