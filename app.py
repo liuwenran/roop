@@ -53,7 +53,7 @@ def training(img, video):
     return 'work_dirs/result.mp4'
 
 
-block = gr.Blocks().queue()
+block = gr.Blocks().queue(max_size=20)
 with block:
     gr.Markdown('## 表情包换脸')
 
