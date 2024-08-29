@@ -6,7 +6,7 @@ import threading
 import roop.globals
 import roop.processors.frame.core
 from roop.core import update_status
-from roop.face_analyser import get_one_face, get_many_faces, find_similar_face
+from roop.face_analyser import get_one_face, get_many_faces, find_similar_face, find_face_by_sex, find_any_face
 from roop.face_reference import get_face_reference, set_face_reference, clear_face_reference
 from roop.typing import Face, Frame
 from roop.utilities import conditional_download, resolve_relative_path, is_image, is_video
@@ -34,7 +34,7 @@ def clear_face_swapper() -> None:
 
 def pre_check() -> bool:
     download_directory_path = resolve_relative_path('../models')
-    conditional_download(download_directory_path, ['https://huggingface.co/CountFloyd/deepfake/resolve/main/inswapper_128.onnx'])
+    conditional_download(download_directory_path, ['https://huggingface.co/ezioruan/inswapper_128.onnx/resolve/main/inswapper_128.onnx'])
     return True
 
 
@@ -67,7 +67,10 @@ def process_frame(source_face: Face, reference_face: Face, temp_frame: Frame) ->
             for target_face in many_faces:
                 temp_frame = swap_face(source_face, target_face, temp_frame)
     else:
-        target_face = find_similar_face(temp_frame, reference_face)
+        # target_face = find_face_by_sex(temp_frame, reference_face, 'M')
+        target_face = find_any_face(temp_frame)
+        # target_face = find_similar_face(temp_frame, reference_face)
+        
         if target_face:
             temp_frame = swap_face(source_face, target_face, temp_frame)
     return temp_frame

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-
+from gfpgan.utils import GFPGANer
 import os
 import sys
 # single thread doubles cuda performance - needs to be set before torch import
@@ -20,14 +20,14 @@ import roop.metadata
 import roop.ui as ui
 from roop.predictor import predict_image, predict_video
 from roop.processors.frame.core import get_frame_processors_modules
-from roop.utilities import has_image_extension, is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, restore_audio, create_temp, move_temp, clean_temp, normalize_output_path
+from roop.utilities import has_image_extension, is_image, is_video, detect_fps, create_video, extract_frames, get_temp_frame_paths, get_temp_frame_paths_to_be_changed, restore_audio, create_temp, move_temp, clean_temp, normalize_output_path
 
 warnings.filterwarnings('ignore', category=FutureWarning, module='insightface')
 warnings.filterwarnings('ignore', category=UserWarning, module='torchvision')
 
 
 def parse_args() -> None:
-    # signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
+    signal.signal(signal.SIGINT, lambda signal_number, frame: destroy())
     program = argparse.ArgumentParser(formatter_class=lambda prog: argparse.HelpFormatter(prog, max_help_position=100))
     program.add_argument('-s', '--source', help='select an source image', dest='source_path')
     program.add_argument('-t', '--target', help='select an target image or video', dest='target_path')
@@ -48,11 +48,10 @@ def parse_args() -> None:
     program.add_argument('--execution-provider', help='available execution provider (choices: cpu, ...)', dest='execution_provider', default=['cpu'], choices=suggest_execution_providers(), nargs='+')
     program.add_argument('--execution-threads', help='number of execution threads', dest='execution_threads', type=int, default=suggest_execution_threads())
     program.add_argument('-v', '--version', action='version', version=f'{roop.metadata.name} {roop.metadata.version}')
+    program.add_argument('--process-path', action='store_true')
 
     args = program.parse_args()
-    return args
 
-def set_args(args) -> None:
     roop.globals.source_path = args.source_path
     roop.globals.target_path = args.target_path
     roop.globals.output_path = normalize_output_path(roop.globals.source_path, roop.globals.target_path, args.output_path)
@@ -72,6 +71,7 @@ def set_args(args) -> None:
     roop.globals.max_memory = args.max_memory
     roop.globals.execution_providers = decode_execution_providers(args.execution_provider)
     roop.globals.execution_threads = args.execution_threads
+    roop.globals.process_path = args.process_path
 
 
 def encode_execution_providers(execution_providers: List[str]) -> List[str]:
@@ -130,10 +130,37 @@ def update_status(message: str, scope: str = 'ROOP.CORE') -> None:
         ui.update_status(message)
 
 
+IMAGE_EXTENSIONS = ('.jpg', '.jpeg', '.png', '.JPG', '.JPEG', '.PNG')
+
+
 def start() -> None:
-    for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
-        if not frame_processor.pre_start():
-            return
+    # for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+    #     if not frame_processor.pre_start():
+    #         return
+    
+    # process path to path
+    if roop.globals.process_path:
+        if not os.path.exists(roop.globals.output_path):
+            os.makedirs(roop.globals.output_path)
+        
+        all_images = []
+        target_path = os.path.dirname(roop.globals.target_path)
+        frame_files = os.listdir(target_path)
+        frame_files = [os.path.join(target_path, f) for f in frame_files]
+        frame_files.sort()
+        for frame in frame_files:
+            frame_extension = os.path.splitext(frame)[1]
+            if frame_extension in IMAGE_EXTENSIONS:
+                all_images.append(frame)
+
+        for image in all_images:
+            output_path = os.path.join(roop.globals.output_path, image.split('/')[-1])
+            shutil.copy2(image, output_path)
+            for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
+                update_status('Progressing...', frame_processor.NAME)
+                frame_processor.process_image(roop.globals.source_path, output_path, output_path)
+                frame_processor.post_process()
+    
     # process image to image
     if has_image_extension(roop.globals.target_path):
         if predict_image(roop.globals.target_path):
@@ -164,7 +191,8 @@ def start() -> None:
         update_status('Extracting frames with 30 FPS...')
         extract_frames(roop.globals.target_path)
     # process frame
-    temp_frame_paths = get_temp_frame_paths(roop.globals.target_path)
+    # temp_frame_paths = get_temp_frame_paths(roop.globals.target_path)
+    temp_frame_paths = get_temp_frame_paths_to_be_changed(roop.globals.target_path, 110, 175)
     if temp_frame_paths:
         for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):
             update_status('Progressing...', frame_processor.NAME)
@@ -193,7 +221,7 @@ def start() -> None:
         restore_audio(roop.globals.target_path, roop.globals.output_path)
     # clean temp
     update_status('Cleaning temporary resources...')
-    clean_temp(roop.globals.target_path)
+    # clean_temp(roop.globals.target_path)
     # validate video
     if is_video(roop.globals.target_path):
         update_status('Processing to video succeed!')
@@ -207,8 +235,8 @@ def destroy() -> None:
     sys.exit()
 
 
-def run(args) -> None:
-    set_args(args)
+def run() -> None:
+    parse_args()
     if not pre_check():
         return
     for frame_processor in get_frame_processors_modules(roop.globals.frame_processors):

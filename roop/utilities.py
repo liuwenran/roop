@@ -72,6 +72,11 @@ def get_temp_frame_paths(target_path: str) -> List[str]:
     temp_directory_path = get_temp_directory_path(target_path)
     return glob.glob((os.path.join(glob.escape(temp_directory_path), '*.' + roop.globals.temp_frame_format)))
 
+def get_temp_frame_paths_to_be_changed(target_path: str, begin: int, end: int) -> List[str]:
+    temp_directory_path = get_temp_directory_path(target_path)
+    path_list = glob.glob((os.path.join(glob.escape(temp_directory_path), '*.' + roop.globals.temp_frame_format)))
+    path_list.sort()
+    return path_list[begin:end]
 
 def get_temp_directory_path(target_path: str) -> str:
     target_name, _ = os.path.splitext(os.path.basename(target_path))

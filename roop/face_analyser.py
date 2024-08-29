@@ -52,3 +52,19 @@ def find_similar_face(frame: Frame, reference_face: Face) -> Optional[Face]:
                 if distance < roop.globals.similar_face_distance:
                     return face
     return None
+
+
+def find_face_by_sex(frame: Frame, reference_face: Face, sex='M') -> Optional[Face]:
+    many_faces = get_many_faces(frame)
+    if many_faces:
+        for face in many_faces:
+            if face.sex == sex:
+                return face
+    return None
+
+def find_any_face(frame: Frame) -> Optional[Face]:
+    many_faces = get_many_faces(frame)
+    if many_faces:
+        for face in many_faces:
+            return face
+    return None
